@@ -17,18 +17,21 @@ public class UnitScript : MonoBehaviour
 
         sr.sprite = unit.sp;
 
-        float scale = unit.size / (unit.sp.texture.width / unit.sp.pixelsPerUnit);
+        float scale = unit.size / (unit.sp.rect.width * 0.5f / unit.sp.pixelsPerUnit);
 
         transform.localScale = new Vector3(scale, scale, 1);
     }
 
-    public static UnitScript Create(Unit _unit)
+    public static UnitScript Create(Transform _parent)
     {
         GameObject go = new GameObject();
 
-        UnitScript script = go.AddComponent<UnitScript>();
+        if (_parent != null)
+        {
+            go.transform.SetParent(_parent, false);
+        }
 
-        script.SetUnit(_unit);
+        UnitScript script = go.AddComponent<UnitScript>();
 
         return script;
     }

@@ -16,5 +16,5 @@ public class Unit
 
     public float size;
 
-    public UnitType isObstacle;
+    public UnitType unitType;
 }
