@@ -29,9 +29,6 @@ public class NewBehaviourScript : MonoBehaviour
     private float humanPosYPercent;
 
     [SerializeField]
-    private float createGap;
-
-    [SerializeField]
     private int minFoodNum;
 
     [SerializeField]
@@ -54,6 +51,8 @@ public class NewBehaviourScript : MonoBehaviour
 
     private Vector2 stepV;
 
+    private float createGap;
+
     private float[] xPosArr;
 
     private bool isUpdate;
@@ -69,6 +68,10 @@ public class NewBehaviourScript : MonoBehaviour
     void Awake()
     {
         stepV = new Vector2(mainCamera.aspect * mainCamera.orthographicSize, mainCamera.orthographicSize);
+
+        Unit.lineWidth = stepV.x * 2 / lineNum;
+
+        createGap = stepV.x * 2 / lineNum;
 
         Application.targetFrameRate = 60;
 
@@ -105,7 +108,7 @@ public class NewBehaviourScript : MonoBehaviour
 
         container.localPosition = Vector3.zero;
 
-        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, 0);
+        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, -1);
 
         isUpdate = true;
     }
@@ -116,7 +119,7 @@ public class NewBehaviourScript : MonoBehaviour
         {
             deltaTime += Time.deltaTime;
 
-            float posY = -(startSpeed + startSpeed + speedAddPerSecond * deltaTime) * deltaTime * 0.5f;
+            float posY = -(startSpeed + startSpeed + speedAddPerSecond * deltaTime) * deltaTime * stepV.y;
 
             container.localPosition = new Vector3(container.localPosition.x, posY, container.localPosition.z);
 
@@ -167,7 +170,7 @@ public class NewBehaviourScript : MonoBehaviour
             {
                 UnitScript unit = list[i];
 
-                if (Vector3.Distance(unit.transform.position, humanGo.transform.position) < unit.unit.size + humanGo.unit.size)
+                if (Vector2.Distance(unit.transform.position, humanGo.transform.position) < unit.unit.size + humanGo.unit.size)
                 {
                     if (unit.unit.unitType == UnitType.FOOD)
                     {
