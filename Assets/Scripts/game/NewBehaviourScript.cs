@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Collections;
 
 public class NewBehaviourScript : MonoBehaviour
 {
@@ -18,6 +17,9 @@ public class NewBehaviourScript : MonoBehaviour
 
     [SerializeField]
     private Unit human;
+
+    [SerializeField]
+    private RuntimeAnimatorController ra;
 
     [SerializeField]
     private float startSpeed;
@@ -43,11 +45,31 @@ public class NewBehaviourScript : MonoBehaviour
     [SerializeField]
     private Transform container;
 
+    [SerializeField]
+    private SpriteRenderer timer;
+
+    [SerializeField]
+    private TextMesh tm;
+
+    [SerializeField]
+    private TextMeshOutline tmo;
+
+    [SerializeField]
+    private float timerHeight;
+
+    [SerializeField]
+    private float timeDecrease;
+
+    [SerializeField]
+    private float timeDecreaseAddPerSecond;
+
     private Queue<UnitScript> pool = new Queue<UnitScript>();
 
     private List<UnitScript> list = new List<UnitScript>();
 
     private UnitScript humanGo;
+
+    private Animator humanAnimator;
 
     private Vector2 stepV;
 
@@ -64,6 +86,50 @@ public class NewBehaviourScript : MonoBehaviour
     private bool isDown;
 
     private Vector2 mousePos;
+
+    private float timerScaleX;
+
+    private float timerScaleY;
+
+    private float m_time;
+
+    private float time
+    {
+        set
+        {
+            m_time = value;
+
+            timer.transform.localScale = new Vector3(timerScaleX * time, timerScaleY, 1);
+
+            timer.transform.position = new Vector3(-stepV.x * (1 - time), stepV.y - timerHeight * stepV.y * 0.5f, -1);
+        }
+
+        get
+        {
+            return m_time;
+        }
+    }
+
+    private int m_score;
+
+    private int score
+    {
+        set
+        {
+            m_score = value;
+
+            string str = m_score.ToString();
+
+            tm.text = str;
+
+            tmo.SetText(str);
+        }
+
+        get
+        {
+            return m_score;
+        }
+    }
 
     void Awake()
     {
@@ -88,7 +154,21 @@ public class NewBehaviourScript : MonoBehaviour
 
         humanGo = Create(human, null);
 
+        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, -1);
 
+        humanAnimator = humanGo.gameObject.AddComponent<Animator>();
+
+        humanAnimator.runtimeAnimatorController = ra;
+
+        timerScaleX = stepV.x / (timer.sprite.rect.width * 0.5f / timer.sprite.pixelsPerUnit);
+
+        timerScaleY = timerHeight * stepV.y / (timer.sprite.rect.height * 0.5f / timer.sprite.pixelsPerUnit);
+
+        tm.transform.position = new Vector3(0, stepV.y - timerHeight * stepV.y * 2f, -2);
+
+        time = 1;
+
+        score = 0;
 
         StartGame();
     }
@@ -110,6 +190,14 @@ public class NewBehaviourScript : MonoBehaviour
 
         humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, -1);
 
+        time = 1;
+
+        createNum = 0;
+
+        deltaTime = 0;
+
+        score = 0;
+
         isUpdate = true;
     }
 
@@ -119,7 +207,16 @@ public class NewBehaviourScript : MonoBehaviour
         {
             deltaTime += Time.deltaTime;
 
-            float posY = -(startSpeed + startSpeed + speedAddPerSecond * deltaTime) * deltaTime * stepV.y;
+            time -= Time.deltaTime * (timeDecrease + timeDecrease * timeDecreaseAddPerSecond * deltaTime);
+
+            if (time < 0)
+            {
+                Over();
+
+                return;
+            }
+
+            float posY = -(startSpeed + startSpeed + startSpeed * speedAddPerSecond * deltaTime) * deltaTime * stepV.y;
 
             container.localPosition = new Vector3(container.localPosition.x, posY, container.localPosition.z);
 
@@ -172,21 +269,43 @@ public class NewBehaviourScript : MonoBehaviour
 
                 if (Vector2.Distance(unit.transform.position, humanGo.transform.position) < unit.unit.size + humanGo.unit.size)
                 {
-                    if (unit.unit.unitType == UnitType.FOOD)
+                    //if (unit.unit.unitType == UnitType.FOOD)
+                    //{
+                    //    list.RemoveAt(i);
+
+                    //    unit.gameObject.SetActive(false);
+
+                    //    pool.Enqueue(unit);
+
+                    //    continue;
+                    //}
+                    //else
+                    //{
+                    //    Over();
+
+                    //    return;
+                    //}
+
+                    list.RemoveAt(i);
+
+                    unit.gameObject.SetActive(false);
+
+                    pool.Enqueue(unit);
+
+                    time += unit.unit.triggerValue;
+
+                    score += unit.unit.score;
+
+                    if (unit.unit.unitType == UnitType.OBSTACLE)
                     {
-                        list.RemoveAt(i);
-
-                        unit.gameObject.SetActive(false);
-
-                        pool.Enqueue(unit);
-
-                        continue;
+                        humanAnimator.SetTrigger("hit");
                     }
                     else
                     {
-                        Over();
-
-                        return;
+                        if (time > 1)
+                        {
+                            time = 1;
+                        }
                     }
                 }
 
@@ -214,10 +333,6 @@ public class NewBehaviourScript : MonoBehaviour
         isUpdate = false;
 
         isDown = false;
-
-        createNum = 0;
-
-        deltaTime = 0;
     }
 
     private void CreateObstacleAndFood(float _posY)

@@ -27,4 +27,8 @@ public class Unit
     }
 
     public UnitType unitType;
+
+    public float triggerValue;
+
+    public int score;
 }
