@@ -1,25 +1,54 @@
 ﻿using UnityEngine;
+using textureFactory;
 
 public class UnitScript : MonoBehaviour
 {
-    public Unit unit { private set; get; }
+    private const string spritePath = "Assets/Resource/texture/{0}.png";
+
+    public ObstacleSDS unit { private set; get; }
 
     private SpriteRenderer sr;
+
+    private float radius;
+
+    public static float lineWidth;
+
+    public float size
+    {
+        get
+        {
+            return radius * lineWidth;
+        }
+    }
 
     void Awake()
     {
         sr = gameObject.AddComponent<SpriteRenderer>();
     }
 
-    public void SetUnit(Unit _unit)
+    public void SetUnit(ObstacleSDS _unit)
     {
         unit = _unit;
 
-        sr.sprite = unit.sp;
+        SetUnit(unit.icon, unit.radius);
+    }
 
-        float scale = unit.size / (unit.sp.rect.width * 0.5f / unit.sp.pixelsPerUnit);
+    public void SetUnit(string _icon, float _radius)
+    {
+        Sprite sp = GetSp(_icon);
+
+        radius = _radius;
+
+        sr.sprite = sp;
+
+        float scale = size / (sp.rect.width * 0.5f / sp.pixelsPerUnit);
 
         transform.localScale = new Vector3(scale, scale, 1);
+    }
+
+    public Sprite GetSp(string _path)
+    {
+        return TextureFactory.Instance.GetTexture<Sprite>(string.Format(spritePath, _path), null, true);
     }
 
     public static UnitScript Create(Transform _parent)

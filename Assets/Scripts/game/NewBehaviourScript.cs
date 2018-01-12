@@ -7,40 +7,7 @@ public class NewBehaviourScript : MonoBehaviour
     private Camera mainCamera;
 
     [SerializeField]
-    private int lineNum;
-
-    [SerializeField]
-    private Unit[] obstacle;
-
-    [SerializeField]
-    private Unit[] food;
-
-    [SerializeField]
-    private Unit human;
-
-    [SerializeField]
     private RuntimeAnimatorController ra;
-
-    [SerializeField]
-    private float startSpeed;
-
-    [SerializeField]
-    private float speedAddPerSecond;
-
-    [SerializeField]
-    private float humanPosYPercent;
-
-    [SerializeField]
-    private int minFoodNum;
-
-    [SerializeField]
-    private int maxFoodNum;
-
-    [SerializeField]
-    private int minObstacleNum;
-
-    [SerializeField]
-    private int maxObstacleNum;
 
     [SerializeField]
     private Transform container;
@@ -56,12 +23,6 @@ public class NewBehaviourScript : MonoBehaviour
 
     [SerializeField]
     private float timerHeight;
-
-    [SerializeField]
-    private float timeDecrease;
-
-    [SerializeField]
-    private float timeDecreaseAddPerSecond;
 
     private Queue<UnitScript> pool = new Queue<UnitScript>();
 
@@ -92,6 +53,12 @@ public class NewBehaviourScript : MonoBehaviour
     private float timerScaleY;
 
     private float m_time;
+
+    private List<TimeSDS> timeList;
+
+    private float[] levelUpTimeArr;
+
+    private int timeIndex;
 
     private float time
     {
@@ -133,28 +100,41 @@ public class NewBehaviourScript : MonoBehaviour
 
     void Awake()
     {
+        ResourceLoader.Start(null);
+
+        timeList = StaticData.GetList<TimeSDS>();
+
+        levelUpTimeArr = new float[timeList.Count];
+
+        levelUpTimeArr[0] = timeList[0].time;
+
+        for (int i = 1; i < timeList.Count; i++)
+        {
+            levelUpTimeArr[i] = levelUpTimeArr[i - 1] + timeList[i].time;
+        }
+
         stepV = new Vector2(mainCamera.aspect * mainCamera.orthographicSize, mainCamera.orthographicSize);
 
-        Unit.lineWidth = stepV.x * 2 / lineNum;
+        UnitScript.lineWidth = stepV.x * 2 / ConfigDictionary.Instance.lineNum;
 
-        createGap = stepV.x * 2 / lineNum;
+        createGap = stepV.x * 2 / ConfigDictionary.Instance.lineNum;
 
         Application.targetFrameRate = 60;
 
-        xPosArr = new float[lineNum];
+        xPosArr = new float[ConfigDictionary.Instance.lineNum];
 
-        float lineWidth = stepV.x * 2 / lineNum;
+        float lineWidth = stepV.x * 2 / ConfigDictionary.Instance.lineNum;
 
-        for (int i = 0; i < lineNum; i++)
+        for (int i = 0; i < ConfigDictionary.Instance.lineNum; i++)
         {
             float x = -stepV.x + lineWidth * i + lineWidth * 0.5f;
 
             xPosArr[i] = x;
         }
 
-        humanGo = Create(human, null);
+        humanGo = Create("human", ConfigDictionary.Instance.humanRadius, null);
 
-        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, -1);
+        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * ConfigDictionary.Instance.humanPosY, -1);
 
         humanAnimator = humanGo.gameObject.AddComponent<Animator>();
 
@@ -166,7 +146,7 @@ public class NewBehaviourScript : MonoBehaviour
 
         tm.transform.position = new Vector3(0, stepV.y - timerHeight * stepV.y * 2f, -2);
 
-        time = 1;
+        time = ConfigDictionary.Instance.time;
 
         score = 0;
 
@@ -188,15 +168,17 @@ public class NewBehaviourScript : MonoBehaviour
 
         container.localPosition = Vector3.zero;
 
-        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * humanPosYPercent, -1);
+        humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * ConfigDictionary.Instance.humanPosY, -1);
 
-        time = 1;
+        time = ConfigDictionary.Instance.time;
 
         createNum = 0;
 
         deltaTime = 0;
 
         score = 0;
+
+        timeIndex = 0;
 
         isUpdate = true;
     }
@@ -205,9 +187,7 @@ public class NewBehaviourScript : MonoBehaviour
     {
         if (isUpdate)
         {
-            deltaTime += Time.deltaTime;
-
-            time -= Time.deltaTime * (timeDecrease + timeDecrease * timeDecreaseAddPerSecond * deltaTime);
+            time -= Time.deltaTime;
 
             if (time < 0)
             {
@@ -216,7 +196,68 @@ public class NewBehaviourScript : MonoBehaviour
                 return;
             }
 
-            float posY = -(startSpeed + startSpeed + startSpeed * speedAddPerSecond * deltaTime) * deltaTime * stepV.y;
+
+            float posY = container.localPosition.y;
+
+            if (timeIndex == levelUpTimeArr.Length - 1)
+            {
+                posY -= timeList[timeIndex].speed * deltaTime * stepV.y;
+            }
+            else if (deltaTime + Time.deltaTime > levelUpTimeArr[timeIndex])
+            {
+                float p;
+
+                if (timeIndex == 0)
+                {
+                    p = deltaTime;
+                }
+                else
+                {
+                    p = deltaTime - levelUpTimeArr[timeIndex - 1];
+                }
+
+                float p0 = p / timeList[timeIndex].time;
+
+                float v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
+
+                posY -= (v0 + timeList[timeIndex + 1].speed) * (levelUpTimeArr[timeIndex] - deltaTime) * stepV.y * 0.5f;
+
+
+                p = deltaTime + Time.deltaTime - levelUpTimeArr[timeIndex];
+
+                timeIndex++;
+
+                p0 = p / timeList[timeIndex].time;
+
+                v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
+
+                posY -= (timeList[timeIndex].speed + v0) * p * stepV.y * 0.5f;
+            }
+            else
+            {
+                float p;
+
+                if (timeIndex == 0)
+                {
+                    p = deltaTime;
+                }
+                else
+                {
+                    p = deltaTime - levelUpTimeArr[timeIndex - 1];
+                }
+
+                float p0 = p / timeList[timeIndex].time;
+
+                float p1 = (p + Time.deltaTime) / timeList[timeIndex].time;
+
+                float v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
+
+                float v1 = timeList[timeIndex].speed * (1 - p1) + timeList[timeIndex + 1].speed * p1;
+
+                posY -= (v0 + v1) * deltaTime * stepV.y * 0.5f;
+            }
+
+            deltaTime += Time.deltaTime;
 
             container.localPosition = new Vector3(container.localPosition.x, posY, container.localPosition.z);
 
@@ -244,13 +285,13 @@ public class NewBehaviourScript : MonoBehaviour
                 {
                     float x = humanGo.transform.localPosition.x + (Input.mousePosition.x - mousePos.x) / Screen.width * (stepV.x * 2);
 
-                    if (x < -stepV.x + human.size)
+                    if (x < -stepV.x + humanGo.size)
                     {
-                        x = -stepV.x + human.size;
+                        x = -stepV.x + humanGo.size;
                     }
-                    else if (x > stepV.x - human.size)
+                    else if (x > stepV.x - humanGo.size)
                     {
-                        x = stepV.x - human.size;
+                        x = stepV.x - humanGo.size;
                     }
 
                     humanGo.transform.localPosition = new Vector3(x, humanGo.transform.localPosition.y, humanGo.transform.localPosition.z);
@@ -267,7 +308,7 @@ public class NewBehaviourScript : MonoBehaviour
             {
                 UnitScript unit = list[i];
 
-                if (Vector2.Distance(unit.transform.position, humanGo.transform.position) < unit.unit.size + humanGo.unit.size)
+                if (Vector2.Distance(unit.transform.position, humanGo.transform.position) < unit.size + humanGo.size)
                 {
                     //if (unit.unit.unitType == UnitType.FOOD)
                     //{
@@ -292,7 +333,7 @@ public class NewBehaviourScript : MonoBehaviour
 
                     pool.Enqueue(unit);
 
-                    time += unit.unit.triggerValue;
+                    time += unit.unit.timeChange;
 
                     score += unit.unit.score;
 
@@ -302,14 +343,14 @@ public class NewBehaviourScript : MonoBehaviour
                     }
                     else
                     {
-                        if (time > 1)
+                        if (time > ConfigDictionary.Instance.time)
                         {
-                            time = 1;
+                            time = ConfigDictionary.Instance.time;
                         }
                     }
                 }
 
-                if (unit.transform.position.y + unit.unit.size < -stepV.y)
+                if (unit.transform.position.y + unit.size < -stepV.y)
                 {
                     list.RemoveAt(i);
 
@@ -337,7 +378,7 @@ public class NewBehaviourScript : MonoBehaviour
 
     private void CreateObstacleAndFood(float _posY)
     {
-        int num = lineNum;
+        int num = ConfigDictionary.Instance.lineNum;
 
         int foodNum = (int)(Random.value * (maxFoodNum + 1 - minFoodNum)) + minFoodNum;
 
@@ -386,7 +427,7 @@ public class NewBehaviourScript : MonoBehaviour
         }
     }
 
-    private UnitScript Create(Unit _unit, Transform _parent)
+    private UnitScript Create(ObstacleSDS _unit, Transform _parent)
     {
         UnitScript unit;
 
@@ -402,6 +443,26 @@ public class NewBehaviourScript : MonoBehaviour
         unit.gameObject.SetActive(true);
 
         unit.SetUnit(_unit);
+
+        return unit;
+    }
+
+    private UnitScript Create(string _icon, float _radius, Transform _parent)
+    {
+        UnitScript unit;
+
+        if (pool.Count > 0)
+        {
+            unit = pool.Dequeue();
+        }
+        else
+        {
+            unit = UnitScript.Create(_parent);
+        }
+
+        unit.gameObject.SetActive(true);
+
+        unit.SetUnit(_icon, _radius);
 
         return unit;
     }
