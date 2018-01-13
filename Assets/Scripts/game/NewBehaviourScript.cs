@@ -229,7 +229,14 @@ public class NewBehaviourScript : MonoBehaviour
 
                 p0 = p / timeList[timeIndex].time;
 
-                v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
+                if (timeIndex == levelUpTimeArr.Length - 1)
+                {
+                    v0 = timeList[timeIndex].speed;
+                }
+                else
+                {
+                    v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
+                }
 
                 posY -= (timeList[timeIndex].speed + v0) * p * stepV.y * 0.5f;
             }
