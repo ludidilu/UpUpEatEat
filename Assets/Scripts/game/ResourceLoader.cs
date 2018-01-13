@@ -6,9 +6,9 @@ public static class ResourceLoader
 {
     public static void Start(Action _callBack)
     {
-        LoadCsv();
+        LoadConfig();
 
-        StaticData.path = ConfigDictionary.Instance.csvPath;
+        StaticData.path = Path.Combine(Application.streamingAssetsPath, "csv");
 
         LoadCsv();
     }
@@ -20,6 +20,8 @@ public static class ResourceLoader
 
     public static void LoadCsv()
     {
+        StaticData.Dispose();
+
         StaticData.Load<TimeSDS>("time");
 
         StaticData.Load<FoodSDS>("food");

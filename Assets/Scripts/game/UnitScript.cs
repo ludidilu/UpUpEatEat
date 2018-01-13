@@ -48,7 +48,9 @@ public class UnitScript : MonoBehaviour
 
     public Sprite GetSp(string _path)
     {
-        return TextureFactory.Instance.GetTexture<Sprite>(string.Format(spritePath, _path), null, true);
+        return Resources.Load<Sprite>(_path);
+
+        //return TextureFactory.Instance.GetTexture<Sprite>(string.Format(spritePath, _path), null, true);
     }
 
     public static UnitScript Create(Transform _parent)

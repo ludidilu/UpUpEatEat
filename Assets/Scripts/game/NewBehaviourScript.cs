@@ -66,9 +66,9 @@ public class NewBehaviourScript : MonoBehaviour
         {
             m_time = value;
 
-            timer.transform.localScale = new Vector3(timerScaleX * time, timerScaleY, 1);
+            timer.transform.localScale = new Vector3(timerScaleX * time / ConfigDictionary.Instance.time, timerScaleY, 1);
 
-            timer.transform.position = new Vector3(-stepV.x * (1 - time), stepV.y - timerHeight * stepV.y * 0.5f, -1);
+            timer.transform.position = new Vector3(-stepV.x * (ConfigDictionary.Instance.time - time) / ConfigDictionary.Instance.time, stepV.y - timerHeight * stepV.y * 0.5f, -1);
         }
 
         get
@@ -98,7 +98,7 @@ public class NewBehaviourScript : MonoBehaviour
         }
     }
 
-    void Awake()
+    void Start()
     {
         ResourceLoader.Start(null);
 
@@ -201,7 +201,7 @@ public class NewBehaviourScript : MonoBehaviour
 
             if (timeIndex == levelUpTimeArr.Length - 1)
             {
-                posY -= timeList[timeIndex].speed * deltaTime * stepV.y;
+                posY -= timeList[timeIndex].speed * Time.deltaTime * stepV.y;
             }
             else if (deltaTime + Time.deltaTime > levelUpTimeArr[timeIndex])
             {
@@ -254,7 +254,7 @@ public class NewBehaviourScript : MonoBehaviour
 
                 float v1 = timeList[timeIndex].speed * (1 - p1) + timeList[timeIndex + 1].speed * p1;
 
-                posY -= (v0 + v1) * deltaTime * stepV.y * 0.5f;
+                posY -= (v0 + v1) * Time.deltaTime * stepV.y * 0.5f;
             }
 
             deltaTime += Time.deltaTime;
@@ -378,17 +378,19 @@ public class NewBehaviourScript : MonoBehaviour
 
     private void CreateObstacleAndFood(float _posY)
     {
+        TimeSDS timeSDS = timeList[timeIndex];
+
         int num = ConfigDictionary.Instance.lineNum;
 
-        int foodNum = (int)(Random.value * (maxFoodNum + 1 - minFoodNum)) + minFoodNum;
+        int foodNum = (int)(Random.value * (timeSDS.maxFoodNum + 1 - timeSDS.minFoodNum)) + timeSDS.minFoodNum;
 
         for (int i = 0; i < foodNum && num > 0; i++)
         {
-            int foodIndex = (int)(Random.value * food.Length);
+            int foodIndex = (int)(Random.value * timeSDS.foodID.Length);
 
             int posIndex = (int)(Random.value * num);
 
-            UnitScript unit = Create(food[foodIndex], container);
+            UnitScript unit = Create(StaticData.GetData<FoodSDS>(timeSDS.foodID[foodIndex]), container);
 
             list.Add(unit);
 
@@ -403,15 +405,15 @@ public class NewBehaviourScript : MonoBehaviour
             num--;
         }
 
-        int obstacleNum = (int)(Random.value * (maxObstacleNum + 1 - minObstacleNum)) + minObstacleNum;
+        int obstacleNum = (int)(Random.value * (timeSDS.maxObstacleNum + 1 - timeSDS.minObstacleNum)) + timeSDS.minObstacleNum;
 
         for (int i = 0; i < obstacleNum && num > 0; i++)
         {
-            int obstacleIndex = (int)(Random.value * obstacle.Length);
+            int obstacleIndex = (int)(Random.value * timeSDS.obstacleID.Length);
 
             int posIndex = (int)(Random.value * num);
 
-            UnitScript unit = Create(obstacle[obstacleIndex], container);
+            UnitScript unit = Create(StaticData.GetData<ObstacleSDS>(timeSDS.obstacleID[obstacleIndex]), container);
 
             list.Add(unit);
 

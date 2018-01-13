@@ -15,8 +15,6 @@
         }
     }
 
-    public string csvPath;
-
     public int lineNum;
 
     public float humanPosY;
