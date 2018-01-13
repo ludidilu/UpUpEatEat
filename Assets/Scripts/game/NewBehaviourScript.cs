@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using textureFactory;
 
 public class NewBehaviourScript : MonoBehaviour
 {
@@ -56,8 +57,6 @@ public class NewBehaviourScript : MonoBehaviour
 
     private List<TimeSDS> timeList;
 
-    private float[] levelUpTimeArr;
-
     private int timeIndex;
 
     private float time
@@ -100,17 +99,22 @@ public class NewBehaviourScript : MonoBehaviour
 
     void Start()
     {
-        ResourceLoader.Start(null);
+        mainCamera.enabled = false;
+
+        ResourceLoader.Start(InitOver);
+    }
+
+    private void InitOver()
+    {
+        mainCamera.enabled = true;
 
         timeList = StaticData.GetList<TimeSDS>();
 
-        levelUpTimeArr = new float[timeList.Count];
-
-        levelUpTimeArr[0] = timeList[0].time;
+        timeList[0].timeLong = timeList[0].time;
 
         for (int i = 1; i < timeList.Count; i++)
         {
-            levelUpTimeArr[i] = levelUpTimeArr[i - 1] + timeList[i].time;
+            timeList[i].timeLong = timeList[i - 1].timeLong + timeList[i].time;
         }
 
         stepV = new Vector2(mainCamera.aspect * mainCamera.orthographicSize, mainCamera.orthographicSize);
@@ -132,13 +136,15 @@ public class NewBehaviourScript : MonoBehaviour
             xPosArr[i] = x;
         }
 
-        humanGo = Create("human", ConfigDictionary.Instance.humanRadius, null);
+        humanGo = Create(ConfigDictionary.Instance.humanSpriteName, ConfigDictionary.Instance.humanRadius, null);
 
         humanGo.transform.localPosition = new Vector3(0, -stepV.y + stepV.y * 2 * ConfigDictionary.Instance.humanPosY, -1);
 
         humanAnimator = humanGo.gameObject.AddComponent<Animator>();
 
         humanAnimator.runtimeAnimatorController = ra;
+
+        timer.sprite = TextureFactory.Instance.GetTexture<Sprite>(string.Format(UnitScript.spritePath, "blank"), null, true);
 
         timerScaleX = stepV.x / (timer.sprite.rect.width * 0.5f / timer.sprite.pixelsPerUnit);
 
@@ -199,11 +205,11 @@ public class NewBehaviourScript : MonoBehaviour
 
             float posY = container.localPosition.y;
 
-            if (timeIndex == levelUpTimeArr.Length - 1)
+            if (timeIndex == timeList.Count - 1)
             {
                 posY -= timeList[timeIndex].speed * Time.deltaTime * stepV.y;
             }
-            else if (deltaTime + Time.deltaTime > levelUpTimeArr[timeIndex])
+            else if (deltaTime + Time.deltaTime > timeList[timeIndex].timeLong)
             {
                 float p;
 
@@ -213,23 +219,23 @@ public class NewBehaviourScript : MonoBehaviour
                 }
                 else
                 {
-                    p = deltaTime - levelUpTimeArr[timeIndex - 1];
+                    p = deltaTime - timeList[timeIndex - 1].timeLong;
                 }
 
                 float p0 = p / timeList[timeIndex].time;
 
                 float v0 = timeList[timeIndex].speed * (1 - p0) + timeList[timeIndex + 1].speed * p0;
 
-                posY -= (v0 + timeList[timeIndex + 1].speed) * (levelUpTimeArr[timeIndex] - deltaTime) * stepV.y * 0.5f;
+                posY -= (v0 + timeList[timeIndex + 1].speed) * (timeList[timeIndex].timeLong - deltaTime) * stepV.y * 0.5f;
 
 
-                p = deltaTime + Time.deltaTime - levelUpTimeArr[timeIndex];
+                p = deltaTime + Time.deltaTime - timeList[timeIndex].timeLong;
 
                 timeIndex++;
 
                 p0 = p / timeList[timeIndex].time;
 
-                if (timeIndex == levelUpTimeArr.Length - 1)
+                if (timeIndex == timeList.Count - 1)
                 {
                     v0 = timeList[timeIndex].speed;
                 }
@@ -250,7 +256,7 @@ public class NewBehaviourScript : MonoBehaviour
                 }
                 else
                 {
-                    p = deltaTime - levelUpTimeArr[timeIndex - 1];
+                    p = deltaTime - timeList[timeIndex - 1].timeLong;
                 }
 
                 float p0 = p / timeList[timeIndex].time;

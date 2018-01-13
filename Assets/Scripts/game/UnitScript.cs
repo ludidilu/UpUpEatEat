@@ -3,7 +3,7 @@ using textureFactory;
 
 public class UnitScript : MonoBehaviour
 {
-    private const string spritePath = "Assets/Resource/texture/{0}.png";
+    public const string spritePath = "Assets/Arts/texture/{0}.png";
 
     public ObstacleSDS unit { private set; get; }
 
@@ -48,9 +48,7 @@ public class UnitScript : MonoBehaviour
 
     public Sprite GetSp(string _path)
     {
-        return Resources.Load<Sprite>(_path);
-
-        //return TextureFactory.Instance.GetTexture<Sprite>(string.Format(spritePath, _path), null, true);
+        return TextureFactory.Instance.GetTexture<Sprite>(string.Format(spritePath, _path), null, true);
     }
 
     public static UnitScript Create(Transform _parent)

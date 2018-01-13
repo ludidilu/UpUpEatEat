@@ -10,4 +10,6 @@
     public int maxObstacleNum;
     public int[] obstacleID;
     public int[] obstacleValue;
+
+    public float timeLong { set; get; }
 }

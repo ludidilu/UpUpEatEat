@@ -1,4 +1,6 @@
-﻿public enum UnitType
+﻿using UnityEngine;
+
+public enum UnitType
 {
     HUMAN,
     OBSTACLE,

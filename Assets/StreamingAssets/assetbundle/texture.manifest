@@ -1,0 +1,30 @@
+ManifestFileVersion: 0
+CRC: 1379361090
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 83674c223b0ac28d678bb039af88979b
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 36c33a819640bead83b84b1645a12e6d
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+Assets:
+- Assets/Arts/texture/icon_curer.png
+- Assets/Arts/texture/icon_infantry.png
+- Assets/Arts/texture/obstacle_1.png
+- Assets/Arts/texture/food_3.png
+- Assets/Arts/texture/icon_ranger.png
+- Assets/Arts/texture/obstacle_3.png
+- Assets/Arts/texture/obstacle_2.png
+- Assets/Arts/texture/icon_archer.png
+- Assets/Arts/texture/food_2.png
+- Assets/Arts/texture/human.png
+- Assets/Arts/texture/blank.png
+- Assets/Arts/texture/food_1.png
+- Assets/Arts/texture/ui_hint.png
+Dependencies: []

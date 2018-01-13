@@ -22,4 +22,6 @@
     public float humanRadius;
 
     public float time;
+
+    public string humanSpriteName;
 }

@@ -3,4 +3,5 @@
 	<humanPosY>0.1</humanPosY>
 	<humanRadius>0.2</humanRadius>
 	<time>30</time>
+	<humanSpriteName>human</humanSpriteName>
 </config>
